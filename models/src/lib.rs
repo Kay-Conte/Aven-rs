@@ -1,5 +1,7 @@
+mod member;
 mod message;
 mod user;
-mod member;
+
+pub use member::Member;
 pub use message::Message;
 pub use user::User;

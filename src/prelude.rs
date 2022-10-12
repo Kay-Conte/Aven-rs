@@ -1,5 +1,5 @@
-pub use crate::discord_rs_core::application::Application;
-pub use crate::discord_rs_core::application::Context;
+pub use crate::aven_application::application::{Application, Context};
 
-pub use crate::discord_rs_core::connection::Connection;
-pub use crate::discord_rs_core::models::*;
+pub use crate::aven_application::connection::Connection;
+
+pub use crate::aven_models::{Message, User, };

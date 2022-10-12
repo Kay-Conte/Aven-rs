@@ -2,4 +2,3 @@
 
 pub mod connection;
 pub mod application;
-pub mod models;

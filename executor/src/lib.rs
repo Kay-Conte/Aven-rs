@@ -6,6 +6,7 @@ use tokio::{
 };
 
 pub use tokio::sync::RwLock;
+pub use tokio::{join, task};
 
 pub struct DiscordRuntime {
     runtime: Runtime,

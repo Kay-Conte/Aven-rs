@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
-use crate::{models::*, connection::Connection};
-use discord_rs_executor::{DiscordRuntime, RwLock};
+use crate::connection::Connection;
+use aven_executor::{task::spawn, DiscordRuntime, RwLock};
+use aven_models::Message;
 
 /// This struct is the global application context that is sent to
 pub struct Context<C> {
@@ -46,6 +47,9 @@ where
     /// This method is called when a shard recieves a message.
     ///
     /// This method can be omitted
+    ///
+    ///This method will likely become async using async-trait to
+    /// allow sending messages and calling other asynchronous tasks from this call.
     fn message(&self, ctx: Context<Self::Cache>, msg: Message) {}
 
     /// This method is not intended to be overwritten
