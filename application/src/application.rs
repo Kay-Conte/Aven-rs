@@ -39,7 +39,7 @@ where
     /// This type will be constructed from the Default trait and wrapped in an Arc<RwLock<T>>
     ///
     /// For lots of concurrent data access consider wrapping individual fields in Arc<RwLock<T>> additionally to reduce bottleneck
-    type Cache: Default + Send + Sync;
+    type AppCache: Default + Send + Sync;
 
     /// This method is called once on Application::run() and should return a valid discord token.
     fn token(&self) -> String;
@@ -50,7 +50,7 @@ where
     ///
     ///This method will likely become async using async-trait to
     /// allow sending messages and calling other asynchronous tasks from this call.
-    fn message(&self, ctx: Context<Self::Cache>, msg: Message) {}
+    fn message(&self, ctx: Context<Self::AppCache>, msg: Message) {}
 
     /// This method is not intended to be overwritten
     /// but it can be if you wish to implement or integrate with a custom executor.
@@ -61,9 +61,12 @@ where
 
         let rt = DiscordRuntime::new()?;
 
-        let context = Context::new(application.token(), Self::Cache::default());
+        let context = Context::new(application.token(), Self::AppCache::default());
 
-        rt.block_on(async move {});
+        rt.block_on(async move {
+            
+
+        });
 
         Ok(())
     }

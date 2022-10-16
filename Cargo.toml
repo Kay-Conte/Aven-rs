@@ -10,5 +10,4 @@ edition = "2021"
 "aven-models" = { version = "*", path = "models" }
 
 [workspace]
-
-members = ["executor", "application", "models", "gateway"]
+members = ["executor", "application", "models", "gateway", "http"]

@@ -9,17 +9,13 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 const GATEWAY_URL: &str = "wss://gateway.discord.gg/";
 
-pub struct Gateway {
+pub struct Websocket {
     token: String,
-    shard: Shard,
 }
 
-impl Gateway {
+impl Websocket {
     pub fn new(token: String) -> Self {
-        Self {
-            token,
-            shard: Shard::new(),
-        }
+        Self { token }
     }
 
     pub async fn connect() {}
@@ -50,9 +46,7 @@ mod test {
             let (mut write, mut read) = ws_stream.split();
 
             let handle = task::spawn(async move {
-                while let m = read.next().await {
-                    
-                }
+                while let m = read.next().await {}
                 println!("Read loop closing");
             });
 
