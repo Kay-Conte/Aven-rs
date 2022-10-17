@@ -11,3 +11,6 @@ edition = "2021"
 
 [workspace]
 members = ["executor", "application", "models", "gateway", "http"]
+
+[workspace.dependencies]
+tokio = { version = "1.21.2" }

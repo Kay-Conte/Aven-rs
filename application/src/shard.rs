@@ -1,29 +1,31 @@
-use std::collections::HashMap;
+use tokio::task::JoinHandle;
 
-use tokio::sync::mpsc;
-
-struct Shard {
-    mpsc: (mpsc::Sender<String>, mpsc::Receiver<String>),
+pub struct Shard {
+    task: JoinHandle<()>,
 }
 
 impl Shard {
-    pub async fn init(url: String) -> Self {
-        
-        
-        let (sender, reciever) = mpsc::channel(1024);
+    fn run(&mut self) {}
 
-
-        
-        Shard {
-            mpsc: (sender, reciever),
-        }
+    pub fn new(task: JoinHandle<()>) -> Self {
+        Self { task }
     }
-
-    fn run() {}
 }
 
 pub struct ShardManager {
-    shards: HashMap<u32, Shard>,
+    shards: Vec<Shard>,
 }
 
-impl ShardManager {}
+impl ShardManager {
+    pub fn new() -> Self {
+        Self { shards: Vec::new() }
+    }
+
+    pub fn push(&mut self, shard: Shard) {
+        self.shards.push(shard);
+    }
+
+    pub fn destruct_all(&mut self) {
+        todo!()
+    }
+}

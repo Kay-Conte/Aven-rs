@@ -1,8 +1,13 @@
 use std::sync::Arc;
 
-use crate::connection::Connection;
-use aven_executor::{task::spawn, DiscordRuntime, RwLock};
+use crate::{
+    connection::Connection,
+    shard::{Shard, ShardManager},
+};
+use aven_executor::DiscordRuntime;
+use aven_http::Http;
 use aven_models::Message;
+use tokio::{sync::RwLock, task};
 
 /// This struct is the global application context that is sent to
 pub struct Context<C> {
@@ -48,9 +53,9 @@ where
     ///
     /// This method can be omitted
     ///
-    ///This method will likely become async using async-trait to
+    /// This method will likely become async using async-trait to
     /// allow sending messages and calling other asynchronous tasks from this call.
-    fn message(&self, ctx: Context<Self::AppCache>, msg: Message) {}
+    fn message(&self, ctx: Context<Self::AppCache>, msg: Message);
 
     /// This method is not intended to be overwritten
     /// but it can be if you wish to implement or integrate with a custom executor.
@@ -59,13 +64,40 @@ where
     fn run(self: Self) -> Result<(), std::io::Error> {
         let application = Arc::new(self);
 
+        let token = application.token();
+
+        let http = Http::new(&token);
+
+        let cache = Arc::new(RwLock::new(Self::AppCache::default()));
+
         let rt = DiscordRuntime::new()?;
 
-        let context = Context::new(application.token(), Self::AppCache::default());
-
         rt.block_on(async move {
-            
+            let context = Context::new(application.token(), Self::AppCache::default());
 
+            let mut shard_manager = ShardManager::new();
+
+            for _ in [0..4] {
+                // TODO remove clone call for opt
+                let http = http.clone();
+
+                let task = task::spawn(async move {
+                    let gateway_init = http.get_gateway().await;
+                    
+                    
+                    // connect gateway bot over wss
+
+                    // init event loop
+
+                    // handle events
+                });
+
+                let shard = Shard::new(task);
+
+                shard_manager.push(shard);
+            }
+
+            shard_manager
         });
 
         Ok(())

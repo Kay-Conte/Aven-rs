@@ -1,5 +1,5 @@
+pub mod error;
 mod http;
-mod tests;
-mod packet;
+mod packets;
 
 pub use http::Http;

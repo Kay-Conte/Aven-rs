@@ -3,9 +3,12 @@ use reqwest::{
     Client, ClientBuilder,
 };
 
-use crate::packet::Packet;
+use crate::{
+    error::Error,
+    packets::{GatewayInit, OpPacket},
+};
 
-const url: &str = "https://discord.com/api/v10";
+const URL: &str = "https://discord.com/api/v10";
 
 #[derive(Clone)]
 pub struct Http {
@@ -30,7 +33,22 @@ impl Http {
         Http { client }
     }
 
-    fn get_gateway_bot(&self) -> Packet {
-        Packet::Invalid {}
+    pub async fn get_gateway(&self) -> Result<GatewayInit, Error> {
+        let res = match self.client.get(format!("{}/gateway/bot", URL)).send().await {
+            Ok(s) => s,
+            Err(_) => return Err(Error::NoResponse),
+        };
+
+        let text = match res.text().await {
+            Ok(s) => s,
+            Err(_) => {
+                return Err(Error::InvalidResponse);
+            }
+        };
+
+        match serde_json::from_str::<GatewayInit>(&text) {
+            Ok(s) => Ok(s),
+            Err(_) => Err(Error::InvalidResponse),
+        }
     }
 }
