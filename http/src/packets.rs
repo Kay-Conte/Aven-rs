@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct GatewayInit {
-    url: String,
-    shards: u8,
+    pub url: String,
+    pub shards: u8,
     // Session start limit omitted
 }
 

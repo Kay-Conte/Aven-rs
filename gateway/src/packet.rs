@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "op")]
 pub enum Packet {
+    #[serde(skip)]
+    Invalid,
+
     #[serde(rename = "0")]
     Dispatch {},
 

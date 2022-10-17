@@ -1,5 +1,8 @@
-pub use crate::aven_application::application::{Application, Context};
+pub use crate::aven_application::{
+    application::{Application, Context},
+    async_trait,
+};
 
 pub use crate::aven_application::connection::Connection;
 
-pub use crate::aven_models::{Message, User, };
+pub use crate::aven_models::{Message, User};

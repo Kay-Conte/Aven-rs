@@ -1,6 +1,8 @@
 use tokio::task::JoinHandle;
 
 pub struct Shard {
+    //Todo Convert to handle over Result<(), Error>
+    //Todo handle Error in application run
     task: JoinHandle<()>,
 }
 

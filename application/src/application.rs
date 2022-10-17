@@ -2,12 +2,18 @@ use std::sync::Arc;
 
 use crate::{
     connection::Connection,
+    error::Error,
     shard::{Shard, ShardManager},
 };
+use async_trait::async_trait;
 use aven_executor::DiscordRuntime;
+use aven_gateway::init_split_gateway;
 use aven_http::Http;
 use aven_models::Message;
-use tokio::{sync::RwLock, task};
+use tokio::{
+    sync::RwLock,
+    task::{self, JoinHandle},
+};
 
 /// This struct is the global application context that is sent to
 pub struct Context<C> {
@@ -34,6 +40,12 @@ impl<C> Context<C> {
 }
 
 /// Application trait is the main trait used to build a discord application
+///
+/// Data *may* be stored in Self though note this data will be consumed and wrapped in an Arc after calling run
+///
+/// Data typically should be stored in your application::AppCache
+/// which will be wrapped in an Arc<RwLock<>> for interior mutability
+#[async_trait]
 pub trait Application
 where
     Self: Sized + Send + Sync + 'static,
@@ -46,7 +58,9 @@ where
     /// For lots of concurrent data access consider wrapping individual fields in Arc<RwLock<T>> additionally to reduce bottleneck
     type AppCache: Default + Send + Sync;
 
-    /// This method is called once on Application::run() and should return a valid discord token.
+    /// This method is called once and is expected to return a valid discord token
+    ///
+    /// The token returned will be the token used for all further requests
     fn token(&self) -> String;
 
     /// This method is called when a shard recieves a message.
@@ -55,13 +69,17 @@ where
     ///
     /// This method will likely become async using async-trait to
     /// allow sending messages and calling other asynchronous tasks from this call.
-    fn message(&self, ctx: Context<Self::AppCache>, msg: Message);
+    async fn message(&self, ctx: Context<Self::AppCache>, msg: Message);
 
+    /// Call this method to run your application, Constructs an executor, connects with the discord api, 
+    /// and handles all incoming events based on trait methods
+    /// 
+    /// Sharding is handled transparently through this method
+    /// 
     /// This method is not intended to be overwritten
-    /// but it can be if you wish to implement or integrate with a custom executor.
     ///
     /// Note: this function consumes ownership of Self
-    fn run(self: Self) -> Result<(), std::io::Error> {
+    fn run(self: Self) -> Result<(), Error> {
         let application = Arc::new(self);
 
         let token = application.token();
@@ -77,19 +95,32 @@ where
 
             let mut shard_manager = ShardManager::new();
 
-            for _ in [0..4] {
+            for _ in [0..1] {
                 // TODO remove clone call for opt
                 let http = http.clone();
+                let token = token.clone();
+                let context = context.clone();
 
-                let task = task::spawn(async move {
-                    let gateway_init = http.get_gateway().await;
-                    
-                    
-                    // connect gateway bot over wss
+                let task: JoinHandle<()> = task::spawn(async move {
+                    let gateway_init = match http.get_gateway().await {
+                        Ok(init) => init,
+                        Err(_) => return,
+                    };
 
-                    // init event loop
+                    let (sink, mut stream) = match init_split_gateway(gateway_init.url).await {
+                        Ok(gateway) => gateway,
+                        Err(_) => return,
+                    };
 
-                    // handle events
+                    // Init heartbeat over gateway
+
+                    while let Some(packet) = stream.next().await {
+                        let context = context.clone();
+
+                        task::spawn(async move {});
+                        // Event loop
+                        // handle events
+                    }
                 });
 
                 let shard = Shard::new(task);

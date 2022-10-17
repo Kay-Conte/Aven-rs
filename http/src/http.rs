@@ -46,9 +46,6 @@ impl Http {
             }
         };
 
-        match serde_json::from_str::<GatewayInit>(&text) {
-            Ok(s) => Ok(s),
-            Err(_) => Err(Error::InvalidResponse),
-        }
+        serde_json::from_str::<GatewayInit>(&text).map_err(|_| Error::InvalidResponse)
     }
 }
