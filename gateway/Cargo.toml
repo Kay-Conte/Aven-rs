@@ -1,5 +1,5 @@
 [package]
-name = "aven_gateway"
+name = "aven-gateway"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,7 +9,12 @@ edition = "2021"
 tokio = { version = "1.21.2", features = ["rt-multi-thread"] }
 
 tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }
-futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+futures-util = { version = "0.3", default-features = false, features = [
+    "sink",
+    "std",
+] }
+
+url = "2.3.1"
 
 serde = { version = "1.0.145", features = ["derive"] }
 serde_json = { version = "1.0.86" }

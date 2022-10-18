@@ -5,16 +5,16 @@ use tokio::{
     task::JoinHandle,
 };
 
-pub use tokio::sync::RwLock;
-pub use tokio::{join, task};
-
 pub struct DiscordRuntime {
     runtime: Runtime,
 }
 
 impl DiscordRuntime {
     pub fn new() -> Result<DiscordRuntime, std::io::Error> {
-        let runtime = runtime::Builder::new_multi_thread().enable_io().build()?;
+        let runtime = runtime::Builder::new_multi_thread()
+            .enable_io()
+            .enable_time()
+            .build()?;
 
         Ok(DiscordRuntime { runtime })
     }
@@ -38,15 +38,4 @@ impl DiscordRuntime {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn runtime() -> Result<(), std::io::Error> {
-        let rt = DiscordRuntime::new()?;
-
-        rt.block_on(async {
-            println!("Hello World");
-        });
-
-        Ok(())
-    }
 }
