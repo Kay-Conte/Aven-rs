@@ -5,10 +5,7 @@ use futures_util::{
 use tokio::net::TcpStream;
 use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
-use crate::{
-    error::Error,
-    packet::{OpData, OpPacket},
-};
+use crate::{error::Error, packet::OpPacket};
 
 pub async fn init_split_gateway(url: String) -> Result<(GatewaySink, GatewayStream), Error> {
     let (socket, _) = match connect_async(url).await {

@@ -11,6 +11,8 @@ This project is intended to be a user friendly interface for the discord bot api
 
 ## Roadmap
 
+- ~~http and gateway connections~~
+
 - After initial connections with the discord api I will read over the project structure and see where to go from there. I have not worked with websockets in this manner before and am open to learning about any good practices one may recommend.
 
 - Side task: Considering better workspace structure as the current structure is nonsensically derived. Core is undescriptive and contains too many general modules. Executor crate may remain as a way to abstract alternative executors in the future such as a custom implementation or Smol instead of tokio.
@@ -44,8 +46,8 @@ impl Application for Bot {
     fn token(&self) -> String {
         std::env::var("DISCORD_TOKEN").expect("Failed to get discord token")
     }
-    
-    fn message(&self, ctx: Context<Self::Cache>, msg: Message) {
+
+    async fn message(&self, ctx: Context<Self::Cache>, msg: Message) {
         println!("Handling message");
     }
 }
