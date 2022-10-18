@@ -119,18 +119,17 @@ where
                         loop {
                             if let Ok(packet) = stream.next().await {
                                 match packet {
-                                    Packet::Hello(hello) => {
-                                        task::spawn(async move {
-                                            let duration = time::Duration::from_millis(
-                                                hello.heartbeat_interval.into(),
-                                            );
+                                    // Packet::Hello(hello) => {
+                                    //     task::spawn(async move {
+                                    //         let duration = time::Duration::from_millis(
+                                    //             hello.heartbeat_interval.into(),
+                                    //         );
 
-                                            loop {
-                                                tokio::time::sleep(duration).await;
-                                            }
-                                        });
-                                    }
-
+                                    //         loop {
+                                    //             tokio::time::sleep(duration).await;
+                                    //         }
+                                    //     });
+                                    // }
                                     _ => {}
                                 }
 
