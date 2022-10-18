@@ -11,7 +11,10 @@ pub struct DiscordRuntime {
 
 impl DiscordRuntime {
     pub fn new() -> Result<DiscordRuntime, std::io::Error> {
-        let runtime = runtime::Builder::new_multi_thread().enable_io().build()?;
+        let runtime = runtime::Builder::new_multi_thread()
+            .enable_io()
+            .enable_time()
+            .build()?;
 
         Ok(DiscordRuntime { runtime })
     }

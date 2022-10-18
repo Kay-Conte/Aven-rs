@@ -7,12 +7,16 @@ use crate::{
 };
 use async_trait::async_trait;
 use aven_executor::DiscordRuntime;
-use aven_gateway::init_split_gateway;
+use aven_gateway::{
+    init_split_gateway,
+    packet::{OpData, OpPacket},
+};
 use aven_http::Http;
 use aven_models::Message;
 use tokio::{
     sync::RwLock,
     task::{self, JoinHandle},
+    time,
 };
 
 /// This struct is the global application context that is sent to
@@ -71,11 +75,11 @@ where
     /// allow sending messages and calling other asynchronous tasks from this call.
     async fn message(&self, ctx: Context<Self::AppCache>, msg: Message);
 
-    /// Call this method to run your application, Constructs an executor, connects with the discord api, 
+    /// Call this method to run your application, Constructs an executor, connects with the discord api,
     /// and handles all incoming events based on trait methods
-    /// 
+    ///
     /// Sharding is handled transparently through this method
-    /// 
+    ///
     /// This method is not intended to be overwritten
     ///
     /// Note: this function consumes ownership of Self
@@ -107,20 +111,30 @@ where
                         Err(_) => return,
                     };
 
-                    let (sink, mut stream) = match init_split_gateway(gateway_init.url).await {
+                    let (mut sink, mut stream) = match init_split_gateway(gateway_init.url).await {
                         Ok(gateway) => gateway,
                         Err(_) => return,
                     };
 
                     // Init heartbeat over gateway
 
-                    while let Some(packet) = stream.next().await {
-                        let context = context.clone();
+                    let event_loop = task::spawn(async move {
+                        loop {
+                            if let Some(packet) = stream.next().await {
+                                let context = context.clone();
 
-                        task::spawn(async move {});
-                        // Event loop
-                        // handle events
-                    }
+                                task::spawn(async move {});
+                                // Event loop
+                                // handle events
+                            }
+                        }
+                    });
+
+                    let res = sink
+                        .send(OpPacket::identify(token.clone(), "".to_string(), [0, 1]))
+                        .await;
+
+                    let _ = event_loop.await;
                 });
 
                 let shard = Shard::new(task);
@@ -128,7 +142,7 @@ where
                 shard_manager.push(shard);
             }
 
-            shard_manager
+            shard_manager.block().await;
         });
 
         Ok(())

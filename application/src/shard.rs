@@ -30,4 +30,10 @@ impl ShardManager {
     pub fn destruct_all(&mut self) {
         todo!()
     }
+
+    pub async fn block(self) {
+        for shard in self.shards {
+            let _ = shard.task.await;
+        }
+    }
 }

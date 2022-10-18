@@ -5,7 +5,10 @@ use futures_util::{
 use tokio::net::TcpStream;
 use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
-use crate::{error::Error, packet::Packet};
+use crate::{
+    error::Error,
+    packet::{OpData, OpPacket},
+};
 
 pub async fn init_split_gateway(url: String) -> Result<(GatewaySink, GatewayStream), Error> {
     let (socket, _) = match connect_async(url).await {
@@ -27,9 +30,8 @@ impl GatewayStream {
         Self { stream }
     }
 
-    pub async fn next(&mut self) -> Option<Packet> {
-        // TODO may need to handle error, not sure of error types
-        // TODO find better ergonomic representation
+    pub async fn next(&mut self) -> Option<OpPacket> {
+        //TODO await until packet, convert return to result
 
         if let Some(Ok(next)) = self.stream.next().await {
             let content = match next {
@@ -37,7 +39,7 @@ impl GatewayStream {
                 _ => return None,
             };
 
-            if let Ok(packet) = serde_json::from_str::<Packet>(&content) {
+            if let Ok(packet) = OpPacket::from_str(&content) {
                 Some(packet)
             } else {
                 None
@@ -57,9 +59,11 @@ impl GatewaySink {
         Self { sink }
     }
 
-    pub async fn send(&mut self, item: String) -> Result<(), Error> {
+    pub async fn send(&mut self, item: impl Into<OpPacket>) -> Result<(), Error> {
+        let packet: OpPacket = item.into();
+
         self.sink
-            .send(Message::Text(item))
+            .send(Message::Text(packet.to_json()?))
             .await
             .map_err(|_| Error::FailedToSend)
     }
