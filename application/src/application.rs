@@ -7,10 +7,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use aven_executor::DiscordRuntime;
-use aven_gateway::{
-    init_split_gateway,
-    models::packet::{Packet, TaggedPacket},
-};
+use aven_gateway::{init_split_gateway, models::packet::Packet};
 use aven_http::Http;
 use aven_models::Message;
 use tokio::{
@@ -129,8 +126,6 @@ where
                                             );
 
                                             loop {
-                                                
-
                                                 tokio::time::sleep(duration).await;
                                             }
                                         });
@@ -146,13 +141,10 @@ where
                         }
                     });
 
-                    let _ = sink
-                        .send(TaggedPacket::identify(
-                            token.clone(),
-                            "".to_string(),
-                            [0, 1],
-                        ))
-                        .await;
+                    // ? Send Identify
+                    // let _ = sink
+                    //     .send()
+                    //     .await;
 
                     let _ = event_loop.await;
                 });

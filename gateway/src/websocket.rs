@@ -5,10 +5,7 @@ use futures_util::{
 use tokio::net::TcpStream;
 use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
-use crate::{
-    error::Error,
-    models::packet::{Packet, TaggedPacket},
-};
+use crate::{error::Error, models::packet::Packet};
 
 pub async fn init_split_gateway(url: String) -> Result<(GatewaySink, GatewayStream), Error> {
     let (socket, _) = match connect_async(url).await {
@@ -56,8 +53,8 @@ impl GatewaySink {
         Self { sink }
     }
 
-    pub async fn send(&mut self, item: impl Into<TaggedPacket>) -> Result<(), Error> {
-        let packet: TaggedPacket = item.into();
+    pub async fn send(&mut self, item: impl Into<Packet>) -> Result<(), Error> {
+        let packet: Packet = item.into();
 
         self.sink
             .send(Message::Text(packet.to_json()?))

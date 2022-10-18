@@ -1,162 +1,104 @@
-use serde::{Deserialize, Serialize};
+use serde::{de::Visitor, Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::error::Error;
 
 use super::op_codes;
 
-#[derive(Debug, Serialize, Deserialize)]
-
-pub struct TaggedPacket {
-    op: u64,
-    d: Packet,
-}
-
-impl TaggedPacket {
-    pub fn new(op: u64, d: Packet) -> Self {
-        Self { op: op.into(), d }
-    }
-
-    pub fn to_json(&self) -> Result<String, Error> {
-        serde_json::to_string(self).map_err(|e| e.into())
-    }
-
-    pub fn identify(token: String, properties: String, shard: [u8; 2]) -> Self {
-        TaggedPacket::from(Packet::Identify(Identify {
-            token,
-            properties,
-            shard,
-        }))
-    }
-
-    pub fn heartbeat(sequence: Option<u64>) -> Self {
-        TaggedPacket::from(Packet::Heartbeat(Heartbeat(sequence)))
-    }
-}
-
-impl From<Packet> for TaggedPacket {
-    fn from(other: Packet) -> Self {
-        TaggedPacket::new(other.op_code(), other)
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-/// Representation of the data field of a discord Op packet
-///
-/// Each variant contains a tuple with the inner value
-/// being a struct representing the specific op code's data
-
+#[derive(Debug, PartialEq, Eq)]
 pub enum Packet {
-    Dispatch(Dispatch),
-    Heartbeat(Heartbeat),
-    Identify(Identify),
+    Dispatch {},
+
     Hello(Hello),
-    HearbeatAck(HeartbeatAck),
+    Identify {},
 }
 
 impl Packet {
-    fn op_code(&self) -> u64 {
-        match self {
-            Packet::Dispatch(_) => op_codes::DISPATCH,
-            Packet::Heartbeat(_) => op_codes::HEARTBEAT,
-            Packet::Identify(_) => op_codes::IDENTIFY,
-            Packet::Hello(_) => op_codes::HELLO,
-            Packet::HearbeatAck(_) => op_codes::HEARTBEAT_ACK,
-        }
+    pub fn to_json(&self) -> Result<String, Error> {
+        todo!()
     }
 
-    pub fn from_str(str: &str) -> Result<Packet, Error> {
-        let mut json: serde_json::Value = serde_json::from_str(str)?;
+    pub fn from_str(str: &str) -> Result<Self, Error> {
+        todo!()
+    }
+}
 
-        let obj = json.as_object_mut().ok_or(Error::InvalidPacketFormat)?;
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Hello {
+    pub heartbeat_interval: u64,
+}
 
-        let op = obj
-            .get("op")
-            .ok_or(Error::InvalidPacketFormat)?
-            .as_u64()
-            .ok_or(Error::InvalidPacketFormat)?;
+impl<'de> Deserialize<'de> for Packet {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_map(PacketVisitor::new())
+    }
+}
 
-        let d = obj
-            .get("d")
-            .map(|inner| inner.to_owned())
-            .ok_or(Error::InvalidPacketFormat)?;
+pub struct PacketVisitor {
+    op: Option<u64>,
+    d: Option<Value>,
+    s: Option<Value>,
+    t: Option<Value>,
+}
 
-        let packet: Packet = match op {
-            op_codes::DISPATCH => match serde_json::from_value::<Dispatch>(d) {
-                Ok(packet) => packet,
-                Err(_) => return Err(Error::InvalidPacketFormat),
+impl PacketVisitor {
+    fn new() -> Self {
+        Self {
+            op: None,
+            d: None,
+            s: None,
+            t: None,
+        }
+    }
+}
+
+impl<'de> Visitor<'de> for PacketVisitor {
+    type Value = Packet;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("Could not deserialize Packet")
+    }
+
+    fn visit_map<A>(mut self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        while let Some((key, value)) = map.next_entry::<String, Value>()? {
+            match key.as_str() {
+                "op" => {
+                    self.op = Some(
+                        value
+                            .as_u64()
+                            .ok_or(serde::de::Error::custom("Invalid value at op"))?,
+                    )
+                }
+                "d" => self.d = Some(value),
+                "s" => self.s = Some(value),
+                "t" => self.t = Some(value),
+                _ => {}
             }
-            .into(),
-            op_codes::HEARTBEAT => match serde_json::from_value::<Heartbeat>(d) {
-                Ok(packet) => packet,
-                Err(_) => return Err(Error::InvalidPacketFormat),
-            }
-            .into(),
-            op_codes::IDENTIFY => match serde_json::from_value::<Identify>(d) {
-                Ok(packet) => packet,
-                Err(_) => return Err(Error::InvalidPacketFormat),
-            }
-            .into(),
+        }
 
-            op_codes::HELLO => match serde_json::from_value::<Hello>(d) {
-                Ok(packet) => packet,
-                Err(_) => return Err(Error::InvalidPacketFormat),
-            }
-            .into(),
+        let packet = match self.op.ok_or(serde::de::Error::custom(
+            "Invalid packet format, no op code",
+        ))? {
+            op_codes::HELLO => {
+                let value = self.d.ok_or(serde::de::Error::custom(
+                    "Invalid packet format, Missing d field",
+                ))?;
 
-            _ => return Err(Error::InvalidOpCode),
+                let packet = serde_json::from_value(value).map_err(|_| {
+                    serde::de::Error::custom("Invalid packet format, Missing d field")
+                })?;
+
+                Packet::Hello(packet)
+            }
+            _ => return Err(serde::de::Error::custom("Invalid op code")),
         };
 
         Ok(packet)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Dispatch {}
-
-impl From<Dispatch> for Packet {
-    fn from(other: Dispatch) -> Self {
-        Self::Dispatch(other)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Heartbeat(Option<u64>);
-
-impl From<Heartbeat> for Packet {
-    fn from(other: Heartbeat) -> Self {
-        Self::Heartbeat(other)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Identify {
-    pub token: String,
-    pub properties: String,
-    pub shard: [u8; 2],
-}
-
-impl From<Identify> for Packet {
-    fn from(other: Identify) -> Self {
-        Self::Identify(other)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Hello {
-    pub heartbeat_interval: u32,
-}
-
-impl From<Hello> for Packet {
-    fn from(other: Hello) -> Self {
-        Self::Hello(other)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct HeartbeatAck {}
-
-impl From<HeartbeatAck> for Packet {
-    fn from(other: HeartbeatAck) -> Self {
-        Self::HearbeatAck(other)
     }
 }
