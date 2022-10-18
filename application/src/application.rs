@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use aven_executor::DiscordRuntime;
 use aven_gateway::{
     init_split_gateway,
-    packet::{Packet, TaggedPacket},
+    models::packet::{Packet, TaggedPacket},
 };
 use aven_http::Http;
 use aven_models::Message;
@@ -86,6 +86,7 @@ where
     fn run(self: Self) -> Result<(), Error> {
         let application = Arc::new(self);
 
+        //? Only call token function once
         let token = application.token();
 
         let http = Http::new(&token);
@@ -100,7 +101,7 @@ where
             let mut shard_manager = ShardManager::new();
 
             for _ in [0..1] {
-                // TODO remove clone call for opt
+                // TODO replace clone calls if possible
                 let http = http.clone();
                 let token = token.clone();
                 let context = context.clone();
@@ -116,12 +117,27 @@ where
                         Err(_) => return,
                     };
 
-                    // Init heartbeat over gateway
-
                     let event_loop = task::spawn(async move {
+                        let context = context;
                         loop {
                             if let Ok(packet) = stream.next().await {
-                                let context = context.clone();
+                                match packet {
+                                    Packet::Hello(hello) => {
+                                        task::spawn(async move {
+                                            let duration = time::Duration::from_millis(
+                                                hello.heartbeat_interval.into(),
+                                            );
+
+                                            loop {
+                                                
+
+                                                tokio::time::sleep(duration).await;
+                                            }
+                                        });
+                                    }
+
+                                    _ => {}
+                                }
 
                                 task::spawn(async move {});
                                 // Event loop
@@ -130,7 +146,7 @@ where
                         }
                     });
 
-                    let res = sink
+                    let _ = sink
                         .send(TaggedPacket::identify(
                             token.clone(),
                             "".to_string(),

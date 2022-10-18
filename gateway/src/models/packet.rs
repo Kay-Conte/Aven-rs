@@ -2,21 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 
-struct OpCodes;
-
-impl OpCodes {
-    const DISPATCH: u64 = 0;
-    const HEARTBEAT: u64 = 1;
-    const IDENTIFY: u64 = 2;
-    const PRESENCE_UPDATE: u64 = 3;
-    const VOICE_STATE_UPDATE: u64 = 4;
-    const RESUME: u64 = 6;
-    const RECONNECT: u64 = 7;
-    const REQUEST_GUILD_MEMBERS: u64 = 8;
-    const INVALID_SESSION: u64 = 9;
-    const HELLO: u64 = 10;
-    const HEARTBEAT_ACK: u64 = 11;
-}
+use super::op_codes;
 
 #[derive(Debug, Serialize, Deserialize)]
 
@@ -40,6 +26,10 @@ impl TaggedPacket {
             properties,
             shard,
         }))
+    }
+
+    pub fn heartbeat(sequence: Option<u64>) -> Self {
+        TaggedPacket::from(Packet::Heartbeat(Heartbeat(sequence)))
     }
 }
 
@@ -66,11 +56,11 @@ pub enum Packet {
 impl Packet {
     fn op_code(&self) -> u64 {
         match self {
-            Packet::Dispatch(_) => OpCodes::DISPATCH,
-            Packet::Heartbeat(_) => OpCodes::HEARTBEAT,
-            Packet::Identify(_) => OpCodes::IDENTIFY,
-            Packet::Hello(_) => OpCodes::HELLO,
-            Packet::HearbeatAck(_) => OpCodes::HEARTBEAT_ACK,
+            Packet::Dispatch(_) => op_codes::DISPATCH,
+            Packet::Heartbeat(_) => op_codes::HEARTBEAT,
+            Packet::Identify(_) => op_codes::IDENTIFY,
+            Packet::Hello(_) => op_codes::HELLO,
+            Packet::HearbeatAck(_) => op_codes::HEARTBEAT_ACK,
         }
     }
 
@@ -91,23 +81,23 @@ impl Packet {
             .ok_or(Error::InvalidPacketFormat)?;
 
         let packet: Packet = match op {
-            OpCodes::DISPATCH => match serde_json::from_value::<Dispatch>(d) {
+            op_codes::DISPATCH => match serde_json::from_value::<Dispatch>(d) {
                 Ok(packet) => packet,
                 Err(_) => return Err(Error::InvalidPacketFormat),
             }
             .into(),
-            OpCodes::HEARTBEAT => match serde_json::from_value::<Heartbeat>(d) {
+            op_codes::HEARTBEAT => match serde_json::from_value::<Heartbeat>(d) {
                 Ok(packet) => packet,
                 Err(_) => return Err(Error::InvalidPacketFormat),
             }
             .into(),
-            OpCodes::IDENTIFY => match serde_json::from_value::<Identify>(d) {
+            op_codes::IDENTIFY => match serde_json::from_value::<Identify>(d) {
                 Ok(packet) => packet,
                 Err(_) => return Err(Error::InvalidPacketFormat),
             }
             .into(),
 
-            OpCodes::HELLO => match serde_json::from_value::<Hello>(d) {
+            op_codes::HELLO => match serde_json::from_value::<Hello>(d) {
                 Ok(packet) => packet,
                 Err(_) => return Err(Error::InvalidPacketFormat),
             }
@@ -130,7 +120,7 @@ impl From<Dispatch> for Packet {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Heartbeat {}
+pub struct Heartbeat(Option<u64>);
 
 impl From<Heartbeat> for Packet {
     fn from(other: Heartbeat) -> Self {
@@ -140,9 +130,9 @@ impl From<Heartbeat> for Packet {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Identify {
-    token: String,
-    properties: String,
-    shard: [u8; 2],
+    pub token: String,
+    pub properties: String,
+    pub shard: [u8; 2],
 }
 
 impl From<Identify> for Packet {
@@ -153,7 +143,7 @@ impl From<Identify> for Packet {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Hello {
-    heartbeat_interval: u32,
+    pub heartbeat_interval: u32,
 }
 
 impl From<Hello> for Packet {

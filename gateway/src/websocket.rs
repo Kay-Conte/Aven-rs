@@ -7,7 +7,7 @@ use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, Web
 
 use crate::{
     error::Error,
-    packet::{Packet, TaggedPacket},
+    models::packet::{Packet, TaggedPacket},
 };
 
 pub async fn init_split_gateway(url: String) -> Result<(GatewaySink, GatewayStream), Error> {
