@@ -6,6 +6,8 @@ This project is intended to be a user friendly interface for the discord bot api
 
 - [x] Http and Gateway connections
 
+- [ ] Heartbeat over gateway
+
 - [ ] Sharding - Currently working on
 
 - [ ] Data Models
