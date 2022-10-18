@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use aven_executor::DiscordRuntime;
 use aven_gateway::{
     init_split_gateway,
-    packet::{OpData, OpPacket},
+    packet::{Packet, TaggedPacket},
 };
 use aven_http::Http;
 use aven_models::Message;
@@ -120,7 +120,7 @@ where
 
                     let event_loop = task::spawn(async move {
                         loop {
-                            if let Some(packet) = stream.next().await {
+                            if let Ok(packet) = stream.next().await {
                                 let context = context.clone();
 
                                 task::spawn(async move {});
@@ -131,7 +131,11 @@ where
                     });
 
                     let res = sink
-                        .send(OpPacket::identify(token.clone(), "".to_string(), [0, 1]))
+                        .send(TaggedPacket::identify(
+                            token.clone(),
+                            "".to_string(),
+                            [0, 1],
+                        ))
                         .await;
 
                     let _ = event_loop.await;

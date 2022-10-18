@@ -5,7 +5,10 @@ use futures_util::{
 use tokio::net::TcpStream;
 use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
-use crate::{error::Error, packet::OpPacket};
+use crate::{
+    error::Error,
+    packet::{Packet, TaggedPacket},
+};
 
 pub async fn init_split_gateway(url: String) -> Result<(GatewaySink, GatewayStream), Error> {
     let (socket, _) = match connect_async(url).await {
@@ -27,23 +30,20 @@ impl GatewayStream {
         Self { stream }
     }
 
-    pub async fn next(&mut self) -> Option<OpPacket> {
-        //TODO await until packet, convert return to result
+    /// Guaranteed to return a packet each call while connection is running,
+    /// Will return error on invalid packet data
+    pub async fn next(&mut self) -> Result<Packet, Error> {
+        //TODO remove panic
+        let next = self.stream.next().await.expect("Stream ended somehow")?;
 
-        if let Some(Ok(next)) = self.stream.next().await {
-            let content = match next {
-                Message::Text(s) => s,
-                _ => return None,
-            };
+        let content = match next {
+            Message::Text(s) => s,
+            _ => return Err(Error::InvalidPacketFormat),
+        };
 
-            if let Ok(packet) = OpPacket::from_str(&content) {
-                Some(packet)
-            } else {
-                None
-            }
-        } else {
-            None
-        }
+        let packet = Packet::from_str(&content)?;
+
+        Ok(packet)
     }
 }
 
@@ -56,8 +56,8 @@ impl GatewaySink {
         Self { sink }
     }
 
-    pub async fn send(&mut self, item: impl Into<OpPacket>) -> Result<(), Error> {
-        let packet: OpPacket = item.into();
+    pub async fn send(&mut self, item: impl Into<TaggedPacket>) -> Result<(), Error> {
+        let packet: TaggedPacket = item.into();
 
         self.sink
             .send(Message::Text(packet.to_json()?))
