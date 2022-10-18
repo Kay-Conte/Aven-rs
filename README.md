@@ -2,13 +2,6 @@
 
 This project is intended to be a user friendly interface for the discord bot api. The project is in it's early stages and the api will be **VERY** unstable for the time being as I am deciding on a structure for the project.
 
-## Initial Goals
-
-- Open websocket connection with the discord api
-- Support sharding
-- Create good model representations
-- Structure with developer friendly interface in mind
-
 ## Roadmap
 
 - [x] Http and Gateway connections
