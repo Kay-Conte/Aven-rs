@@ -13,17 +13,17 @@ This project is intended to be a user friendly interface for the discord bot api
 
 - [x] Http and Gateway connections
 
-- [] Sharding - Currently working on
+- [ ] Sharding - Currently working on
 
-- [] Data Models
+- [ ] Data Models
 
-- [] Event Models
+- [ ] Event Models
 
-- [] Event Handling
+- [ ] Event Handling
 
-- [] Message Components
+- [ ] Message Components
 
-- [] Interaction support
+- [ ] Interaction support
 
 ## Currently suported
 
