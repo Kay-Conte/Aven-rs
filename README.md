@@ -1,6 +1,6 @@
 # Aven-rs
 
-This project is intended to be a user friendly interface for the discord bot api. The project is in it's early stages and the api will be **VERY** unstable for the time being as I am deciding on a structure for the project.
+This project is a user friendly interface for the discord bot api. The project is in it's early stages and the api will remain unstable for the time being as I continue to decide on a structure for the project.
 
 ## Initial Goals
 
