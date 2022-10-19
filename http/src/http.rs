@@ -3,10 +3,7 @@ use reqwest::{
     Client, ClientBuilder,
 };
 
-use crate::{
-    error::Error,
-    packets::{GatewayInit, OpPacket},
-};
+use crate::{error::Error, packets::GatewayInit};
 
 const URL: &str = "https://discord.com/api/v10";
 

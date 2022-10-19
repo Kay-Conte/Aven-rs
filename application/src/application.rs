@@ -80,7 +80,7 @@ where
     /// This method is not intended to be overwritten
     ///
     /// Note: this function consumes ownership of Self
-    fn run(self: Self) -> Result<(), Error> {
+    fn run(self) -> Result<(), Error> {
         let application = Arc::new(self);
 
         //? Only call token function once

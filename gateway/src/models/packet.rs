@@ -1,5 +1,5 @@
-use serde::{de::Visitor, Deserialize, Serialize, Serializer};
-use serde_json::{json, Value};
+use serde::{de::Visitor, Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::error::Error;
 
@@ -17,7 +17,7 @@ impl Packet {
         serde_json::to_string(&self).map_err(|e| e.into())
     }
 
-    pub fn from_str(str: &str) -> Result<Self, Error> {
+    pub fn from_str(_str: &str) -> Result<Self, Error> {
         todo!()
     }
 }
