@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use crate::error::Error;
 
-use super::op_codes;
+use super::{Hello, Identify, op_codes};
 
 #[derive(Serialize, PartialEq, Eq, Debug)]
 pub struct Packet {
@@ -25,27 +25,16 @@ impl Packet {
 #[derive(Serialize, Debug, PartialEq, Eq)]
 pub enum Data {
     #[serde(rename = "d")]
-    Dispatch {},
+    Dispatch(),
 
     #[serde(rename = "d")]
     Hello(Hello),
 
     #[serde(rename = "d")]
-    Identify {},
+    Identify(Identify),
 }
 
 impl Data {}
-
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
-pub struct Hello {
-    pub heartbeat_interval: u64,
-}
-
-impl From<Hello> for Data {
-    fn from(other: Hello) -> Self {
-        Data::Hello(other)
-    }
-}
 
 impl<'de> Deserialize<'de> for Packet {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
