@@ -6,11 +6,11 @@ This project is intended to be a user friendly interface for the discord bot api
 
 ## Roadmap
 
-- [x] Http and Gateway connections
+- [x] Http and Gateway connections - Finishing packet modeling and deserialization
 
-- [ ] Heartbeat over gateway
+- [ ] Heartbeat over gateway - Currently working on
 
-- [ ] Sharding - Currently working on
+- [ ] Sharding
 
 - [ ] Data Models
 
