@@ -1,21 +1,26 @@
 # Aven-rs
 
-This project is a user friendly interface for the discord bot api. The project is in it's early stages and the api will remain unstable for the time being as I continue to decide on a structure for the project.
+![](https://github.com/Kay-Conte/Aven-rs/banner.png)
 
-## Initial Goals
-
-- Open websocket connection with the discord api
-- Support sharding
-- Create good model representations
-- Structure with developer friendly interface in mind
+This project is intended to be a user friendly interface for the discord bot api. The project is in it's early stages and the api will be **VERY** unstable for the time being as I am deciding on a structure for the project.
 
 ## Roadmap
 
-- ~~http and gateway connections~~
+- [x] Http and Gateway connections - Finishing packet modeling and deserialization
 
-- After initial connections with the discord api I will read over the project structure and see where to go from there. I have not worked with websockets in this manner before and am open to learning about any good practices one may recommend.
+- [ ] Heartbeat over gateway - Currently working on
 
-- Side task: Considering better workspace structure as the current structure is nonsensically derived. Core is undescriptive and contains too many general modules. Executor crate may remain as a way to abstract alternative executors in the future such as a custom implementation or Smol instead of tokio.
+- [ ] Sharding
+
+- [ ] Data Models
+
+- [ ] Event Models
+
+- [ ] Event Handling
+
+- [ ] Message Components
+
+- [ ] Interaction support
 
 ## Currently suported
 
