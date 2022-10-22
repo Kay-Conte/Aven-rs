@@ -116,27 +116,25 @@ where
 
                     let event_loop = task::spawn(async move {
                         let context = context;
-                        loop {
-                            if let Ok(packet) = stream.next().await {
-                                match packet {
-                                    // Packet::Hello(hello) => {
-                                    //     task::spawn(async move {
-                                    //         let duration = time::Duration::from_millis(
-                                    //             hello.heartbeat_interval.into(),
-                                    //         );
+                        while let Ok(packet) = stream.next().await {
+                            match packet {
+                                // Packet::Hello(hello) => {
+                                //     task::spawn(async move {
+                                //         let duration = time::Duration::from_millis(
+                                //             hello.heartbeat_interval.into(),
+                                //         );
 
-                                    //         loop {
-                                    //             tokio::time::sleep(duration).await;
-                                    //         }
-                                    //     });
-                                    // }
-                                    _ => {}
-                                }
-
-                                task::spawn(async move {});
-                                // Event loop
-                                // handle events
+                                //         loop {
+                                //             tokio::time::sleep(duration).await;
+                                //         }
+                                //     });
+                                // }
+                                _ => {}
                             }
+
+                            task::spawn(async move {});
+                            // Event loop
+                            // handle events
                         }
                     });
 
