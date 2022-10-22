@@ -7,7 +7,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use aven_executor::DiscordRuntime;
-use aven_gateway::{init_split_gateway, models::packet::Packet};
+use aven_gateway::{models::Packet, init_split_gateway};
 use aven_http::Http;
 use aven_models::Message;
 use tokio::{
@@ -80,7 +80,7 @@ where
     /// This method is not intended to be overwritten
     ///
     /// Note: this function consumes ownership of Self
-    fn run(self: Self) -> Result<(), Error> {
+    fn run(self) -> Result<(), Error> {
         let application = Arc::new(self);
 
         //? Only call token function once
@@ -119,18 +119,17 @@ where
                         loop {
                             if let Ok(packet) = stream.next().await {
                                 match packet {
-                                    Packet::Hello(hello) => {
-                                        task::spawn(async move {
-                                            let duration = time::Duration::from_millis(
-                                                hello.heartbeat_interval.into(),
-                                            );
+                                    // Packet::Hello(hello) => {
+                                    //     task::spawn(async move {
+                                    //         let duration = time::Duration::from_millis(
+                                    //             hello.heartbeat_interval.into(),
+                                    //         );
 
-                                            loop {
-                                                tokio::time::sleep(duration).await;
-                                            }
-                                        });
-                                    }
-
+                                    //         loop {
+                                    //             tokio::time::sleep(duration).await;
+                                    //         }
+                                    //     });
+                                    // }
                                     _ => {}
                                 }
 

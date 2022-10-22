@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Error {
     Websocket(tokio_tungstenite::tungstenite::Error),
     InvalidPacketFormat,

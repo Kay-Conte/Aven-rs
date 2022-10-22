@@ -3,30 +3,38 @@ use serde_json::Value;
 
 use crate::error::Error;
 
-use super::op_codes;
+use super::{Hello, Identify, op_codes};
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Packet {
-    Dispatch {},
-
-    Hello(Hello),
-    Identify {},
+#[derive(Serialize, PartialEq, Eq, Debug)]
+pub struct Packet {
+    pub op: u64,
+    #[serde(flatten)]
+    pub d: Data,
 }
 
 impl Packet {
     pub fn to_json(&self) -> Result<String, Error> {
-        todo!()
+        serde_json::to_string(&self).map_err(|e| e.into())
     }
 
-    pub fn from_str(str: &str) -> Result<Self, Error> {
+    pub fn from_str(_str: &str) -> Result<Self, Error> {
         todo!()
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Hello {
-    pub heartbeat_interval: u64,
+#[derive(Serialize, Debug, PartialEq, Eq)]
+pub enum Data {
+    #[serde(rename = "d")]
+    Dispatch(),
+
+    #[serde(rename = "d")]
+    Hello(Hello),
+
+    #[serde(rename = "d")]
+    Identify(Identify),
 }
+
+impl Data {}
 
 impl<'de> Deserialize<'de> for Packet {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -82,23 +90,28 @@ impl<'de> Visitor<'de> for PacketVisitor {
             }
         }
 
-        let packet = match self.op.ok_or(serde::de::Error::custom(
+        let op = self.op.ok_or(serde::de::Error::custom(
             "Invalid packet format, no op code",
-        ))? {
+        ))?;
+
+        match op {
             op_codes::HELLO => {
                 let value = self.d.ok_or(serde::de::Error::custom(
                     "Invalid packet format, Missing d field",
                 ))?;
 
-                let packet = serde_json::from_value(value).map_err(|_| {
-                    serde::de::Error::custom("Invalid packet format, Missing d field")
+                let d: Hello = serde_json::from_value(value).map_err(|_| {
+                    serde::de::Error::custom("Invalid packet format, Failed to parse d field")
                 })?;
 
-                Packet::Hello(packet)
-            }
-            _ => return Err(serde::de::Error::custom("Invalid op code")),
-        };
+                let packet: Packet = Packet {
+                    op,
+                    d: Data::Hello(d),
+                };
 
-        Ok(packet)
+                Ok(packet)
+            }
+            _ => Err(serde::de::Error::custom("Invalid op code")),
+        }
     }
 }
