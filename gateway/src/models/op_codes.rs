@@ -1,3 +1,7 @@
+//! Used to construct packets with OpCode in the Deserializer<'_> implementation
+
+//? If custom discriminants on tuple or struct enums are ever added, this can be replaced with serde_repr.
+
 pub const DISPATCH: u64 = 0;
 pub const HEARTBEAT: u64 = 1;
 pub const IDENTIFY: u64 = 2;

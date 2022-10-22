@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use crate::error::Error;
 
-use super::{Hello, Identify, op_codes};
+use super::{op_codes, Dispatch, Hello, Identify};
 
 #[derive(Serialize, PartialEq, Eq, Debug)]
 pub struct Packet {
@@ -25,7 +25,7 @@ impl Packet {
 #[derive(Serialize, Debug, PartialEq, Eq)]
 pub enum Data {
     #[serde(rename = "d")]
-    Dispatch(),
+    Dispatch(Dispatch),
 
     #[serde(rename = "d")]
     Hello(Hello),
@@ -34,7 +34,12 @@ pub enum Data {
     Identify(Identify),
 }
 
-impl Data {}
+impl Data {
+    /// Returns op_code of Data variant
+    pub fn op_code(&self) -> u64 {
+        todo!()
+    }
+}
 
 impl<'de> Deserialize<'de> for Packet {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -94,12 +99,12 @@ impl<'de> Visitor<'de> for PacketVisitor {
             "Invalid packet format, no op code",
         ))?;
 
+        let value = self.d.ok_or(serde::de::Error::custom(
+            "Invalid packet format, Missing d field",
+        ))?;
+
         match op {
             op_codes::HELLO => {
-                let value = self.d.ok_or(serde::de::Error::custom(
-                    "Invalid packet format, Missing d field",
-                ))?;
-
                 let d: Hello = serde_json::from_value(value).map_err(|_| {
                     serde::de::Error::custom("Invalid packet format, Failed to parse d field")
                 })?;

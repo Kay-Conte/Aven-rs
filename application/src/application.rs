@@ -7,7 +7,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use aven_executor::DiscordRuntime;
-use aven_gateway::{models::Packet, init_split_gateway};
+use aven_gateway::{init_split_gateway, models::Packet};
 use aven_http::Http;
 use aven_models::Message;
 use tokio::{
