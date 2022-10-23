@@ -7,7 +7,10 @@ use crate::{
 };
 use async_trait::async_trait;
 use aven_executor::DiscordRuntime;
-use aven_gateway::{init_split_gateway, models::Packet};
+use aven_gateway::{
+    init_split_gateway,
+    models::{components::Properties, packet::Data, Packet},
+};
 use aven_http::Http;
 use aven_models::Message;
 use tokio::{
@@ -64,6 +67,19 @@ where
     /// The token returned will be the token used for all further requests
     fn token(&self) -> String;
 
+    /// This method expects system properties
+    ///
+    /// this method can be assumed to be called once
+    ///
+    /// Used to identify system with discord api
+    fn properties(&self) -> Properties {
+        Properties {
+            browser: "Aven".to_string(),
+            os: "Aven_os".to_string(),
+            device: "Aven_sys".to_string(),
+        }
+    }
+
     /// This method is called when a shard recieves a message.
     ///
     /// This method can be omitted
@@ -83,8 +99,8 @@ where
     fn run(self) -> Result<(), Error> {
         let application = Arc::new(self);
 
-        //? Only call token function once
         let token = application.token();
+        let properties = application.properties();
 
         let http = Http::new(&token);
 
@@ -99,8 +115,13 @@ where
 
             for _ in [0..1] {
                 // TODO replace clone calls if possible
-                let http = http.clone();
+                let application = application.clone();
                 let token = token.clone();
+
+                // Todo Find alternative to clone
+                let properties = properties.clone();
+
+                let http = http.clone();
                 let context = context.clone();
 
                 let task: JoinHandle<()> = task::spawn(async move {
@@ -138,10 +159,9 @@ where
                         }
                     });
 
-                    // ? Send Identify
-                    // let _ = sink
-                    //     .send()
-                    //     .await;
+                    let _ = sink
+                        .send(Data::identify(token, application.properties(), [0, 1]))
+                        .await;
 
                     let _ = event_loop.await;
                 });

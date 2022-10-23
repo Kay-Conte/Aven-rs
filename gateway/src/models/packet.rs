@@ -3,7 +3,10 @@ use serde_json::Value;
 
 use crate::error::Error;
 
-use super::{op_codes, Dispatch, Hello, Identify};
+use super::{
+    components::{Properties, Token},
+    op_codes, Dispatch, Hello, Identify,
+};
 
 #[derive(Serialize, PartialEq, Eq, Debug)]
 pub struct Packet {
@@ -19,6 +22,18 @@ impl Packet {
 
     pub fn from_str(_str: &str) -> Result<Self, Error> {
         todo!()
+    }
+}
+
+impl From<Data> for Packet {
+    fn from(other: Data) -> Self {
+        let op = match other {
+            Data::Dispatch(_) => op_codes::DISPATCH,
+            Data::Hello(_) => op_codes::HELLO,
+            Data::Identify(_) => op_codes::IDENTIFY,
+        };
+
+        Packet { op, d: other }
     }
 }
 
@@ -38,6 +53,10 @@ impl Data {
     /// Returns op_code of Data variant
     pub fn op_code(&self) -> u64 {
         todo!()
+    }
+
+    pub fn identify(token: impl Into<Token>, properties: Properties, shard: [u64; 2]) -> Self {
+        Self::Identify(Identify::new(token, properties, shard))
     }
 }
 
